@@ -22,7 +22,7 @@ for directory in [DATA_INPUT_DIR, DATA_OUTPUT_DIR]:
 # Model Configurations
 # -----------------------------------------------------------------------------
 OLLAMA_MODEL = "qwen3:4b"
-CHECKPOINT_NAME = "SDXL\\juggernautXL_ragnarokBy.safetensors"
+CHECKPOINT_NAME = "juggernautXL_ragnarokBy.safetensors"
 
 # -----------------------------------------------------------------------------
 # System Prompts
