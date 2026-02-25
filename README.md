@@ -1,5 +1,7 @@
 # 🛋️ Virtual Staging AI
 
+A locally hosted application that transforms photos of empty rooms into fully furnished interiors using Generative AI.
+
 This project orchestrates **Stable Diffusion XL (via ComfyUI)** for photorealistic image generation and **Ollama (Local LLM)** for intelligent prompt enhancement, wrapped in a user-friendly **Streamlit** interface.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -7,6 +9,10 @@ This project orchestrates **Stable Diffusion XL (via ComfyUI)** for photorealist
 ![Frontend](https://img.shields.io/badge/Frontend-Streamlit-red)
 ![AI](https://img.shields.io/badge/AI-SDXL%20%2B%20Ollama-purple)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+
+<!-- MAIN HERO IMAGE -->
+![Virtual Staging Demo](assets/demo-main-comparison.png)
+*Side-by-side comparison: Original empty room vs. AI Staged Interior.*
 
 ## ✨ Features
 
@@ -17,11 +23,24 @@ This project orchestrates **Stable Diffusion XL (via ComfyUI)** for photorealist
 - **🎛️ Dynamic Quality:** Adjustable resolution slider (768px to 4096px) to balance generation speed vs. high-fidelity detail.
 - **🚀 Instant Preview:** Comes with pre-staged examples in the gallery so you can verify the UI immediately upon launch.
 
+## 📸 Interface Overview
+
+### Intelligent Prompt Enhancement
+Switch to the **"Prompt Details"** tab to see how the local LLM (Ollama) takes your simple description and expands it into a highly detailed architectural prompt for Stable Diffusion.
+
+![Prompt Enhancement Tab](assets/demo-prompt-tab.png)
+
+### History & Advanced Controls
+Scroll down to access the **Resolution (Shortest Side)** slider under **Advanced Settings** for 4K upscaling, as well as the **Recent Designs** gallery. Click any previous generation to instantly restore it to the main view for comparison.
+
+![Gallery and Settings](assets/demo-gallery-controls.png)
+
 ## 📂 Project Structure
 
 ```text
 virtual-staging-ai/
 ├── .venv/                 # Python Virtual Environment (Local only)
+├── assets/                # Documentation Images & Screenshots
 ├── app/                   # Application Source Code
 │   ├── main.py            # FastAPI Backend
 │   ├── app.py             # Streamlit Frontend
