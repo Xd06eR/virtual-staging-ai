@@ -40,33 +40,60 @@ class WorkflowManager:
             print(f"Warning: Could not read image size: {e}")
             return 1024, 1024
 
+    def _get_optimized_scale_factor(self, width: int, height: int, target: int = 1024, threshold: int = 128) -> float:
+        """
+        Calculates input scale factor for SDXL with a threshold to avoid unnecessary resizing.
+        This ensures the image enters the diffusion process at an optimal size (approx 1024).
+        """
+        shortest_side = min(width, height)
+        if shortest_side == 0:
+            return 1.0
+
+        # THRESHOLD CHECK: If within tolerance, skip resizing
+        if abs(shortest_side - target) <= threshold:
+            print(f"Image ({width}x{height}) is within SDXL threshold. Skipping initial resize.")
+            return 1.0
+        
+        # CALC SCALE: If outside threshold, calculate factor for both upscale/downscale
+        scale = target / shortest_side
+
+        action = "Upscaling" if scale > 1.0 else "Downscaling"
+        print(f"Image outside threshold. {action} input to ~{target}px.")
+        
+        return scale
+
     def create_custom_workflow(self, prompt: str, input_image_path: Path, output_prefix: str, target_resolution: int = 1024) -> dict:
         """
         Generates a runtime workflow with specific inputs inserted.
         
         Modifications:
         1. Injects image path, prompt, seed, and checkpoint.
-        2. Calculates scaling to ensure SDXL works at ~1024px.
-        3. Optimizes topology: Bypasses the Upscale node if target resolution matches base resolution.
+        2. Calculates scaling to ensure SDXL works at ~1024px (Input Factor).
+        3. Calculates final scaling to reach User Target Resolution (Output Factor).
         """
         workflow = copy.deepcopy(self.base_workflow)
         
         # 1. Calculations
         width, height = self._get_image_dimensions(input_image_path)
         shortest_side = min(width, height)
-        # Scale to ensure shortest side is 1024 for SDXL generation
-        input_scale_factor = 1024 / shortest_side if shortest_side > 0 else 1.0
-        final_scale_factor = target_resolution / 1024.0
+
+        input_scale_factor = self._get_optimized_scale_factor(width, height, target=1024, threshold=128)
+        current_working_resolution = shortest_side * input_scale_factor
+
+        if current_working_resolution > 0:
+            final_scale_factor = target_resolution / current_working_resolution
+        else:
+            final_scale_factor = 1.0
+
         seed = random.randint(1, 1_000_000_000_000)
 
         # 2. Node Mapping (Node ID -> Input Key -> Value)
-        # These IDs correspond to specific nodes in the virtual_staging_workflow.json
         node_updates = {
             "2":   {"image": input_image_path.name},      # Load Image Node
             "22":  {"text": prompt},                      # Positive Prompt Node
             "25":  {"seed": seed},                        # KSampler Node
             "7":   {"ckpt_name": self.checkpoint_name},   # Checkpoint Loader
-            "213": {"factor": input_scale_factor},        # Initial Downscale Node
+            "213": {"factor": input_scale_factor},        # Initial Scale Node (SDXL Optimization)
             "126": {"filename_prefix": output_prefix},    # Save Image Node
         }
 
@@ -76,16 +103,15 @@ class WorkflowManager:
                 workflow[node_id]["inputs"].update(inputs)
 
         # 3. Topology Optimization
-        # If target is 1024, we don't need the final upscale step.
-        is_base_res = abs(target_resolution - 1024) < 1
+        is_final_res_exact = abs(target_resolution - current_working_resolution) < 1
         
-        if is_base_res:
-            # Bypass Upscale: Connect VAE Decode (26) directly to Save Image (126)
+        if is_final_res_exact:
+            # Bypass Final Upscale: Connect VAE Decode (26) directly to Save Image (126)
             workflow["126"]["inputs"]["images"] = ["26", 0]
             # Remove Upscale Node (131) to keep graph clean
             workflow.pop("131", None)
         else:
-            # Enable Upscale: Configure Upscale Node (131)
+            # Enable Final Upscale: Configure Upscale Node (131)
             if "131" in workflow:
                 workflow["131"]["inputs"]["factor"] = final_scale_factor
                 # Connect Upscale Node output to Save Image input
