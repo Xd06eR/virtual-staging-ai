@@ -1,4 +1,4 @@
-# 🛋️ Virtual Staging AI
+# Virtual Staging AI
 
 A locally hosted application that transforms photos of empty rooms into fully furnished interiors using Generative AI.
 
@@ -14,16 +14,16 @@ This project orchestrates **Stable Diffusion XL (via ComfyUI)** for photorealist
 ![Virtual Staging Demo](assets/demo-main-comparison.png)
 *Side-by-side comparison: Original empty room vs. AI Staged Interior.*
 
-## ✨ Features
+## Features
 
-- **🏠 Natural Language Staging:** Simply describe the style (e.g., *"Modern Scandinavian living room"*), and the local LLM refines it into a professional architectural prompt.
-- **📐 Structural Integrity:** Uses advanced **ControlNet Union** pipelines (Lineart, Segment, and Depth) to strictly preserve walls, windows, and floors while adding furniture.
-- **⚡ Local & Private:** Runs entirely offline (after model download). No data leaves your machine.
-- **🖼️ Comparison Gallery:** Side-by-side comparison of original vs. staged images with metadata history.
-- **🎛️ Dynamic Quality:** Adjustable resolution slider (768px to 4096px) to balance generation speed vs. high-fidelity detail.
-- **🚀 Instant Preview:** Comes with pre-staged examples in the gallery so you can verify the UI immediately upon launch.
+- **Natural Language Staging:** Simply describe the style (e.g., *"Modern Scandinavian living room"*), and the local LLM refines it into a professional architectural prompt.
+- **Structural Integrity:** Uses advanced **ControlNet Union** pipelines (Lineart, Segment, and Depth) to strictly preserve walls, windows, and floors while adding furniture.
+- **Local & Private:** Runs entirely offline (after model download). No data leaves your machine.
+- **Comparison Gallery:** Side-by-side comparison of original vs. staged images with metadata history.
+- **Dynamic Quality:** Adjustable resolution slider (768px to 4096px) to balance generation speed vs. high-fidelity detail.
+- **Instant Preview:** Comes with pre-staged examples in the gallery so you can verify the UI immediately upon launch.
 
-## 📸 Interface Overview
+## Interface Overview
 
 ### Intelligent Prompt Enhancement
 Switch to the **"Prompt Details"** tab to see how the local LLM (Ollama) takes your simple description and expands it into a highly detailed architectural prompt for Stable Diffusion.
@@ -35,7 +35,7 @@ Scroll down to access the **Resolution (Shortest Side)** slider under **Advanced
 
 ![Gallery and Settings](assets/demo-gallery-controls.png)
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 virtual-staging-ai/
@@ -59,7 +59,7 @@ virtual-staging-ai/
 └── requirements.txt       # Python Dependencies
 ```
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 1.  **OS:** Windows 10/11 (Recommended), Linux, or macOS (Apple Silicon).
 2.  **GPU:** NVIDIA GPU with at least 8GB VRAM recommended for SDXL operations.
@@ -67,7 +67,7 @@ virtual-staging-ai/
 4.  **Git:** Installed and available in your terminal.
 5.  **Ollama:** Installed and running. [Download Ollama](https://ollama.com/download).
 
-## 🚀 Installation
+## Installation
 
 Follow these steps **in order** to ensure dependencies do not conflict.
 
@@ -143,7 +143,7 @@ Pull the Qwen model used for prompt enhancement (or any other model defined in `
 ollama pull qwen3:4b
 ```
 
-## 🖥️ Usage
+## Usage
 
 ### 1. Start the System
 Run the cross-platform launcher script. This handles the orchestration of FastAPI, Streamlit, and ComfyUI.
@@ -162,11 +162,11 @@ To shut down all services cleanly:
 python stop.py
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements.
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
