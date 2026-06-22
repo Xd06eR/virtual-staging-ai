@@ -22,12 +22,14 @@ app = FastAPI(title="Virtual Staging API")
 ollama = Ollama()
 comfyui = ComfyUI()
 
+# The browser never calls this API directly — the Streamlit server proxies every
+# request server-side — so CORS only needs to permit the local Streamlit origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_origins=["http://127.0.0.1:8501", "http://localhost:8501"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 # -----------------------------------------------------------------------------
@@ -52,8 +54,10 @@ def save_generation_metadata(image_path: str, prompt: str, description: str, res
 # Routes
 # -----------------------------------------------------------------------------
 
+# Sync `def` (not async): these handlers do blocking I/O (requests, time.sleep),
+# so FastAPI runs them in a worker thread and the event loop stays responsive.
 @app.post("/enhance-prompt", response_model=EnhancePromptResponse)
-async def enhance_prompt(request: EnhancePromptRequest):
+def enhance_prompt(request: EnhancePromptRequest):
     """Enhance room description into SD prompt."""
     try:
         enhanced = ollama.enhance_prompt(request.room_description)
@@ -66,7 +70,7 @@ async def enhance_prompt(request: EnhancePromptRequest):
         return EnhancePromptResponse(success=False, error=str(e), enhanced_prompt="", room_description="")
 
 @app.post("/generate-image", response_model=GenerateImageResponse)
-async def generate_image(request: GenerateImageRequest):
+def generate_image(request: GenerateImageRequest):
     """Generate staged image from enhanced prompt."""
     try:
         output_path = comfyui.generate_image(
