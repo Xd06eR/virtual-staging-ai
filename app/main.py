@@ -3,24 +3,38 @@ FastAPI Backend
 Exposes endpoints for prompt enhancement and image generation.
 """
 import json
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
+import uvicorn
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import ensure_data_dirs
 from app.data_models import (
-    EnhancePromptRequest, 
+    EnhancePromptRequest,
     EnhancePromptResponse,
-    GenerateImageRequest, 
-    GenerateImageResponse
+    GenerateImageRequest,
+    GenerateImageResponse,
 )
 from app.img2img import ComfyUI
 from app.prompt_enhancer import Ollama
 
-# Initialize App & Services
-app = FastAPI(title="Virtual Staging API")
-ollama = Ollama()
-comfyui = ComfyUI()
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Construct services once at startup so importing this module has no side
+    # effects, and request handlers stay cheap and testable via Depends.
+    ensure_data_dirs()
+    app.state.ollama = Ollama()
+    app.state.comfyui = ComfyUI()
+    yield
+
+
+app = FastAPI(title="Virtual Staging API", lifespan=lifespan)
 
 # The browser never calls this API directly — the Streamlit server proxies every
 # request server-side — so CORS only needs to permit the local Streamlit origin.
@@ -32,6 +46,15 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
+
+def get_ollama() -> Ollama:
+    return app.state.ollama
+
+
+def get_comfyui() -> ComfyUI:
+    return app.state.comfyui
+
+
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
@@ -42,13 +65,14 @@ def save_generation_metadata(image_path: str, prompt: str, description: str, res
         metadata = {
             "prompt": prompt,
             "description": description,
-            "input_image": Path(image_path).name, # Storing filename primarily
-            "resolution_setting": resolution
+            "input_image": Path(image_path).name,  # Storing filename primarily
+            "resolution_setting": resolution,
         }
         with open(path.with_suffix(".json"), "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2)
     except Exception as e:
-        print(f"Metadata save failed: {e}")
+        logger.warning("metadata save failed for %s: %s", image_path, e)
+
 
 # -----------------------------------------------------------------------------
 # Routes
@@ -57,46 +81,51 @@ def save_generation_metadata(image_path: str, prompt: str, description: str, res
 # Sync `def` (not async): these handlers do blocking I/O (requests, time.sleep),
 # so FastAPI runs them in a worker thread and the event loop stays responsive.
 @app.post("/enhance-prompt", response_model=EnhancePromptResponse)
-def enhance_prompt(request: EnhancePromptRequest):
+def enhance_prompt(request: EnhancePromptRequest, ollama: Ollama = Depends(get_ollama)):
     """Enhance room description into SD prompt."""
     try:
         enhanced = ollama.enhance_prompt(request.room_description)
         return EnhancePromptResponse(
             enhanced_prompt=enhanced,
             room_description=request.room_description,
-            success=True
+            success=True,
         )
     except Exception as e:
-        return EnhancePromptResponse(success=False, error=str(e), enhanced_prompt="", room_description="")
+        return EnhancePromptResponse(
+            success=False, error=str(e), enhanced_prompt="", room_description=""
+        )
+
 
 @app.post("/generate-image", response_model=GenerateImageResponse)
-def generate_image(request: GenerateImageRequest):
+def generate_image(request: GenerateImageRequest, comfyui: ComfyUI = Depends(get_comfyui)):
     """Generate staged image from enhanced prompt."""
     try:
         output_path = comfyui.generate_image(
             request.enhanced_prompt,
             Path(request.image_path),
-            request.target_resolution
+            request.target_resolution,
         )
-        
+
         save_generation_metadata(
-            output_path, 
-            request.enhanced_prompt, 
-            request.room_description, 
-            request.target_resolution
+            output_path,
+            request.enhanced_prompt,
+            request.room_description,
+            request.target_resolution,
         )
 
         return GenerateImageResponse(
             enhanced_prompt=request.enhanced_prompt,
             image_path=output_path,
-            success=True
+            success=True,
         )
     except Exception as e:
         return GenerateImageResponse(success=False, error=str(e))
 
+
 @app.get("/health")
-async def health_check():
+def health_check():
     return {"status": "healthy"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
