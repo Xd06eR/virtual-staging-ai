@@ -14,9 +14,12 @@ DATA_INPUT_DIR = PROJECT_ROOT / "data" / "inputs"
 DATA_OUTPUT_DIR = PROJECT_ROOT / "data" / "outputs"
 SAMPLES_DIR = PROJECT_ROOT / "data" / "samples"
 
-# Ensure critical directories exist immediately
-for directory in [DATA_INPUT_DIR, DATA_OUTPUT_DIR]:
-    directory.mkdir(parents=True, exist_ok=True)
+
+def ensure_data_dirs() -> None:
+    """Create the data directories if missing. Call at startup, not import."""
+    for directory in (DATA_INPUT_DIR, DATA_OUTPUT_DIR):
+        directory.mkdir(parents=True, exist_ok=True)
+
 
 # -----------------------------------------------------------------------------
 # Model Configurations
