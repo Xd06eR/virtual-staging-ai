@@ -46,8 +46,8 @@ class APIClient:
     @staticmethod
     def is_online() -> bool:
         try:
-            return requests.get(f"{FASTAPI_URL}/health", timeout=60).status_code == 200
-        except:
+            return requests.get(f"{FASTAPI_URL}/health", timeout=3).status_code == 200
+        except requests.exceptions.RequestException:
             return False
 
     @staticmethod
@@ -108,8 +108,8 @@ def load_metadata(output_path: Path) -> dict:
     if meta_path.exists():
         try:
             return json.loads(meta_path.read_text(encoding="utf-8"))
-        except:
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"Warning: could not read metadata {meta_path}: {exc}")
     return {}
 
 # -----------------------------------------------------------------------------
