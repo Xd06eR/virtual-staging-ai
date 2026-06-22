@@ -2,13 +2,27 @@
 Image-to-Image Controller
 Orchestrates the image generation process via ComfyUI.
 """
+import logging
 import shutil
 import time
-import requests
 from pathlib import Path
 
-from app.workflow_manager import WorkflowManager
+import requests
+
 from app.config import DATA_OUTPUT_DIR
+from app.workflow_manager import WorkflowManager
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_unlink(path: Path) -> None:
+    """Remove a temp file, ignoring "already gone" but logging real OS errors."""
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        logger.warning("could not remove temp file %s: %s", path, exc)
 
 class ComfyUI:
     # Default Paths
@@ -72,10 +86,7 @@ class ComfyUI:
         finally:
             # Always clean up the input copy
             if comfy_input_path and comfy_input_path.exists():
-                try:
-                    comfy_input_path.unlink()
-                except OSError:
-                    pass
+                _safe_unlink(comfy_input_path)
 
     def _copy_to_comfy_input(self, source: Path) -> Path:
         """Copies the source image to the ComfyUI input folder."""
@@ -96,9 +107,12 @@ class ComfyUI:
     def _wait_for_generation(self, prompt_id: str, timeout: int = 600) -> str:
         """Polls the history endpoint until the specific prompt ID is finished."""
         start_time = time.time()
+        consecutive_errors = 0
         while time.time() - start_time < timeout:
             try:
-                res = requests.get(f"{self.SERVER_URL}/history/{prompt_id}")
+                res = requests.get(
+                    f"{self.SERVER_URL}/history/{prompt_id}", timeout=10
+                )
                 if res.status_code == 200:
                     history = res.json()
                     if prompt_id in history:
@@ -108,10 +122,16 @@ class ComfyUI:
                             for img in node_output.get("images", []):
                                 if img.get("type") == "output":
                                     return img["filename"]
-            except Exception:
-                pass # Transient network errors or partial JSON ignored
+                consecutive_errors = 0
+            except requests.exceptions.RequestException as exc:
+                # Transient network blip — log once, retry, but bail if it persists.
+                consecutive_errors += 1
+                if consecutive_errors >= 10:
+                    raise RuntimeError(
+                        f"ComfyUI history poll failed 10x in a row: {exc}"
+                    ) from exc
             time.sleep(1)
-            
+
         raise TimeoutError("Image generation timed out.")
 
     def _retrieve_result(self, filename: str, prefix: str, destination: Path) -> str:
@@ -121,16 +141,14 @@ class ComfyUI:
         # Strategy 1: Direct Filename Match
         if source_file.exists():
             shutil.copy2(source_file, destination)
-            try: source_file.unlink() 
-            except: pass
+            _safe_unlink(source_file)
             return str(destination)
 
         # Strategy 2: Prefix Match (Fallback)
         candidates = list(self.OUTPUT_DIR.glob(f"{prefix}*"))
         if candidates:
             shutil.copy2(candidates[0], destination)
-            try: candidates[0].unlink()
-            except: pass
+            _safe_unlink(candidates[0])
             return str(destination)
 
         raise RuntimeError(f"Generated file missing from {self.OUTPUT_DIR}")

@@ -34,4 +34,4 @@ class Ollama:
             return response["response"].strip()
         
         except Exception as e:
-            raise Exception(f"Ollama interaction failed: {str(e)}")
+            raise RuntimeError(f"Ollama interaction failed: {e}") from e

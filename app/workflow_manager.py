@@ -32,13 +32,9 @@ class WorkflowManager:
             return json.load(f)
     
     def _get_image_dimensions(self, image_path: Path) -> tuple[int, int]:
-        """Safely retrieves image dimensions, defaulting to 1024x1024 on error."""
-        try:
-            with Image.open(image_path) as img:
-                return img.size
-        except Exception as e:
-            print(f"Warning: Could not read image size: {e}")
-            return 1024, 1024
+        """Read image dimensions. Let PIL raise if the file is not a valid image."""
+        with Image.open(image_path) as img:
+            return img.size
 
     def _get_optimized_scale_factor(self, width: int, height: int, target: int = 1024, threshold: int = 128) -> float:
         """
