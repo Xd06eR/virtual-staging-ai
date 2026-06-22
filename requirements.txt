@@ -8,3 +8,7 @@ ollama==0.6.0
 streamlit==1.51.0
 xformers==0.0.32.post2
 python-multipart==0.0.20
+
+# Test runner and FastAPI TestClient transport (needed to run the tests/ suite)
+pytest==9.1.1
+httpx==0.28.1
