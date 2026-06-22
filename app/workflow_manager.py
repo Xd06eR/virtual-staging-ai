@@ -3,12 +3,15 @@ Workflow Manager
 Handles loading and modifying the ComfyUI workflow JSON format.
 """
 import json
+import logging
 import random
 import copy
 from pathlib import Path
 from PIL import Image
 
 from app.config import CHECKPOINT_NAME
+
+logger = logging.getLogger(__name__)
 
 class WorkflowManager:
     DEFAULT_WORKFLOW_PATH = Path("workflows/virtual_staging_workflow.json")
@@ -40,14 +43,14 @@ class WorkflowManager:
 
         # THRESHOLD CHECK: If within tolerance, skip resizing
         if abs(shortest_side - target) <= threshold:
-            print(f"Image ({width}x{height}) is within SDXL threshold. Skipping initial resize.")
+            logger.info("image %dx%d within SDXL threshold; skipping initial resize", width, height)
             return 1.0
-        
+
         # CALC SCALE: If outside threshold, calculate factor for both upscale/downscale
         scale = target / shortest_side
 
         action = "Upscaling" if scale > 1.0 else "Downscaling"
-        print(f"Image outside threshold. {action} input to ~{target}px.")
+        logger.info("image outside threshold; %s input to ~%dpx", action, target)
         
         return scale
 

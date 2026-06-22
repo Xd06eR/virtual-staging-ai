@@ -6,10 +6,13 @@ import streamlit as st
 import requests
 import time
 import json
+import logging
 from pathlib import Path
 from typing import Optional, Tuple
 
 from app.config import DATA_INPUT_DIR, DATA_OUTPUT_DIR, SAMPLES_DIR
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -109,7 +112,7 @@ def load_metadata(output_path: Path) -> dict:
         try:
             return json.loads(meta_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as exc:
-            print(f"Warning: could not read metadata {meta_path}: {exc}")
+            logger.warning("could not read metadata %s: %s", meta_path, exc)
     return {}
 
 # -----------------------------------------------------------------------------
