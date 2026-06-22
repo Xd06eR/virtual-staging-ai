@@ -51,7 +51,7 @@ def kill_process_by_port(port: int) -> bool:
             # Unix way (lsof)
             subprocess.run(f"lsof -ti:{port} | xargs kill -9", shell=True, capture_output=True)
             return True
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         pass
     return False
 
@@ -78,8 +78,8 @@ def main():
         # Remove file
         try:
             PID_FILE.unlink()
-        except:
-            pass
+        except OSError as exc:
+            print(f"Warning: could not remove PID file: {exc}")
     
     # 2. Cleanup via Ports (Fallback)
     print("\n  • Ensuring ports are clear...")

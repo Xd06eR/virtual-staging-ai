@@ -11,6 +11,7 @@ import json
 import threading
 import webbrowser
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 # Configuration
@@ -63,8 +64,8 @@ def save_pid(service_name: str, pid: int):
         try:
             with open(PID_FILE, "r") as f:
                 pids = json.load(f)
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"Warning: could not read PID file, starting fresh: {exc}")
     pids[service_name] = pid
     with open(PID_FILE, "w") as f:
         json.dump(pids, f)
@@ -168,7 +169,7 @@ def check_ollama():
         urllib.request.urlopen("http://127.0.0.1:11434", timeout=1)
         print("   ✓ Ollama is running")
         return True
-    except Exception:
+    except urllib.error.URLError:
         pass
 
     # Method 2: Attempt Start
@@ -187,7 +188,7 @@ def check_ollama():
                 urllib.request.urlopen("http://127.0.0.1:11434", timeout=1)
                 print("   ✓ Ollama started successfully")
                 return True
-            except:
+            except urllib.error.URLError:
                 pass
     except Exception as e:
         print(f"   ❌ Could not start Ollama: {e}")
@@ -220,7 +221,7 @@ def main():
     try:
         time.sleep(2)
         webbrowser.open(f"http://127.0.0.1:{STREAMLIT_PORT}")
-    except:
+    except Exception:
         pass
 
     try:
