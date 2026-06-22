@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import Optional, Tuple
 
-from config import DATA_INPUT_DIR, DATA_OUTPUT_DIR, SAMPLES_DIR
+from app.config import DATA_INPUT_DIR, DATA_OUTPUT_DIR, SAMPLES_DIR
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -135,8 +135,8 @@ def render_sidebar():
                         st.session_state.selected_sample = sample
                         st.rerun()
 
-def render_input_section() -> Tuple[Optional[bytes], Optional[str], bool]:
-    """Renders input column and returns file data + active filename + ready state."""
+def render_input_section() -> Tuple[Optional[bytes], Optional[str], Optional[str], Optional[int]]:
+    """Renders input column; returns (bytes, name, description, resolution) or all-None."""
     st.markdown("### 1. Upload & Describe")
     container = st.container(border=True)
     

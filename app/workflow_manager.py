@@ -13,22 +13,15 @@ from app.config import CHECKPOINT_NAME
 class WorkflowManager:
     DEFAULT_WORKFLOW_PATH = Path("workflows/virtual_staging_workflow.json")
 
-    def __init__(self, workflow_path: str = None, checkpoint_name: str = CHECKPOINT_NAME):
-        self.workflow_path = Path(workflow_path) if workflow_path else self.DEFAULT_WORKFLOW_PATH
-        self.checkpoint_name = checkpoint_name
+    def __init__(self):
+        self.checkpoint_name = CHECKPOINT_NAME
         self.base_workflow = self._load_base_workflow()
-    
+
     def _load_base_workflow(self) -> dict:
         """Loads the template JSON workflow from disk."""
-        # Handle relative path fallback if script is run from different locations
-        if not self.workflow_path.exists():
-            fallback = Path(__file__).parent.parent / self.DEFAULT_WORKFLOW_PATH
-            if fallback.exists():
-                self.workflow_path = fallback
-            else:
-                raise FileNotFoundError(f"Workflow file not found: {self.workflow_path}")
-                
-        with open(self.workflow_path, "r", encoding="utf-8") as f:
+        # Resolve relative to this file so the loader works from any CWD.
+        workflow_path = Path(__file__).parent.parent / self.DEFAULT_WORKFLOW_PATH
+        with open(workflow_path, "r", encoding="utf-8") as f:
             return json.load(f)
     
     def _get_image_dimensions(self, image_path: Path) -> tuple[int, int]:
