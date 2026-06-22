@@ -30,12 +30,9 @@ class ComfyUI:
     OUTPUT_DIR = Path("ComfyUI/output").resolve()
     SERVER_URL = "http://127.0.0.1:8188"
 
-    def __init__(self, server_address: str = None):
-        if server_address:
-            self.SERVER_URL = f"http://{server_address}"
-        
+    def __init__(self):
         self.workflow_manager = WorkflowManager()
-        
+
         # Ensure directories exist
         self.INPUT_DIR.mkdir(parents=True, exist_ok=True)
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -53,11 +50,9 @@ class ComfyUI:
         if not input_image_path.exists():
             raise FileNotFoundError(f"Input image not found: {input_image_path}")
 
-        # Determine file sequence
-        try:
-            number = input_image_path.stem.split("_")[-1]
-        except IndexError:
-            number = "00001"
+        # Determine file sequence; fall back when the name has no separator.
+        stem = input_image_path.stem
+        number = stem.split("_")[-1] if "_" in stem else "00001"
             
         final_output_path = DATA_OUTPUT_DIR / f"virtual_staging_{number}.png"
         temp_prefix = f"vs_temp_{number}_{int(time.time())}_"
