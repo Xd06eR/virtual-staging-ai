@@ -1,15 +1,6 @@
+"""Virtual Staging AI application package.
+
+Intentionally minimal. Importing a submodule (``app.main``, ``app.config``, ...)
+must not pull in the others or construct services as a side effect — import from
+the specific submodule you need.
 """
-Virtual Staging AI - App Module
-Exposes key components for the backend and frontend interaction.
-"""
-from app.config import OLLAMA_MODEL, CHECKPOINT_NAME, SYSTEM_PROMPT
-from app.data_models import (
-    EnhancePromptRequest,
-    EnhancePromptResponse,
-    GenerateImageRequest,
-    GenerateImageResponse
-)
-from app.img2img import ComfyUI
-from app.main import app
-from app.prompt_enhancer import Ollama
-from app.workflow_manager import WorkflowManager
