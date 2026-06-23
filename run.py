@@ -142,7 +142,7 @@ def start_streamlit():
     log_path = LOG_DIR / "streamlit.log"
     log_file = open(log_path, "w", encoding="utf-8")
 
-    streamlit_script = PROJECT_ROOT / "app" / "app.py"
+    streamlit_script = PROJECT_ROOT / "app" / "frontend.py"
     process = subprocess.Popen(
         [PYTHON_EXEC, "-m", "streamlit", "run", str(streamlit_script),
          "--server.port", str(STREAMLIT_PORT), 
