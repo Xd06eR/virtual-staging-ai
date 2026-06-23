@@ -27,9 +27,7 @@ Thumbs.db
 # DATA MANAGEMENT
 # =================================================================
 
-# 1. SAMPLES: Keep everything in the samples gallery for instant use
-data/samples/*
-!data/samples/.gitkeep
+# 1. SAMPLES: Curated demo gallery, committed in full
 
 # 2. INPUTS: Ignore user uploads, but KEEP the 3 demo files
 data/inputs/*
@@ -42,8 +40,3 @@ data/outputs/*
 !data/outputs/virtual_staging_00001.*
 !data/outputs/virtual_staging_00002.*
 !data/outputs/virtual_staging_00003.*
-
-# 4. FOLDER STRUCTURE: Ensure empty folders are tracked by GitHub
-# (Useful if you delete all inputs/outputs later)
-!data/inputs/.gitkeep
-!data/outputs/.gitkeep
