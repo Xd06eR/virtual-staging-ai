@@ -43,7 +43,7 @@ virtual-staging-ai/
 ├── assets/                # Documentation Images & Screenshots
 ├── app/                   # Application Source Code
 │   ├── main.py            # FastAPI Backend
-│   ├── app.py             # Streamlit Frontend
+│   ├── frontend.py        # Streamlit Frontend
 │   ├── img2img.py         # ComfyUI Interface
 │   ├── config.py          # Model & Path Configuration
 │   └── ...
